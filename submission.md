@@ -2,6 +2,10 @@
 
 ---
 
+## AI Use
+
+I didn't end up using AI that much during this assignment. However, what I did mostly use it for was helping me to understand what certain services classes did, as I am very new to the python coding language, and still sometimes struggle to understand it. Beyond this, I navigated entirely by myself without the use of AI, and was mainly able to understand the bugs I was facing without its help either, but just used it to confirm if my suspicions were correct, and to help me revise the bug. I did however use one instance of AI outside of this; it helped me diagnose the second bug I fixed (Issue #3) as I struggled to locate it myself due to my unfamiliarity with python. The way I did this is further discussed when I talked about bug analysis #2.
+
 ## Codebase Map
 The first thing I looked at in this file was models.py, which defines 7 SQLAlchemy models: 
    
