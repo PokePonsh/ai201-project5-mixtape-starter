@@ -23,16 +23,29 @@ user reads a notification:
 **Noticed patterns:**
 One pattern that was very obvious when looking at the program was the structure of each of the routes was nearly identical. Their structure is running a program from one of the services, and throwing an error when an input causes an issue. All the logic is done outside of the actual routes, which overall makes sense.
 
-## Bug Reproduction
-
-**Issue #2:**
-
-I reproduced this bug by adding a friend to a user, and having that friend play a song the previous day near midnight, than ran the command the next day. This caused the friend to show up as playing that song, even though they weren't playing it that day, but the previous day.
-
-**Issue #3:**
-
-I reproduced this bug by following exactly what Simone did. I ran a song search for "anthem" and found only 1 result, but after some more digging, I found that the multiple entries returned were being collapsed into one, so once I temporarily stopped this behavior, and got returned three different results from the "anthem" search.
 
 **Issue #5**
 
 Reproducing this issue was very simplistic I tested all three playlists created in seed_data, and when launcing all three song lists using `/playlists/<playlist_id>/songs` without exemption it did not show the last song the playlist should've included.
+
+## Root cause Analysis #1
+
+**Issue #2- Friends Listening Now shows people from yesterday**
+
+**Reproduction:**
+
+I reproduced this bug by adding a friend to a user, and having that friend play a song the previous day near midnight, than ran the command the next day. This caused the friend to show up as playing that song, even though they weren't playing it that day, but the previous day.
+
+**How I found the root cause:**
+
+To find the root issue, I started in `routes/feed` looking at the problimatic class, `listening_now`. From there I looked at what it called, which was `get_friends_listening_now`, found where it was located via the imports, navigated to that file in the repo, then Ctrl+f in the file to find the class. I was confident I was in the right place once I looked at the time checking logic used in that class, which would cause the exact issues reported in the bug report, and would explain my independent reproduction.
+
+**The root cause:**
+
+The issue present in this class was that in order to figure out whether the last song was played today, the program checked if it was played in the last 24 hours rather than being day dependent. The fact that the calculation was done by time rather than by day caused the issue as at 9am, the song from 11pm the day previously would not have expired for the day, as 24 hours hadened passed, and no new song was played after that time, leading to the bug.
+
+**My fix and side-effect check:**
+
+I fixed the issue by changing the cutoff from `datetime.now(timezone.utc) - RECENT_THRESHOLD (24 hours)` to `datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)` This changed the logic for the cutoff to always be at midnight rather than 24 hours after the song is played, which fixes the root issue. There wasn't much side-effect checks that I had to do for this change as the change affects nothing besides this class, which is only called for that function, so once I checked that `listening_now` worked properly, I completed the bug fix.
+
+
