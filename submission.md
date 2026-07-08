@@ -48,4 +48,23 @@ The issue present in this class was that in order to figure out whether the last
 
 I fixed the issue by changing the cutoff from `datetime.now(timezone.utc) - RECENT_THRESHOLD (24 hours)` to `datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)` This changed the logic for the cutoff to always be at midnight rather than 24 hours after the song is played, which fixes the root issue. There wasn't much side-effect checks that I had to do for this change as the change affects nothing besides this class, which is only called for that function, so once I checked that `listening_now` worked properly, I completed the bug fix.
 
+## Root Cause Analysis #2
+
+**Issue #3- The same song keeps showing up twice in search**
+
+**Reproduction:**
+
+I reproduced this bug by following exactly what Simone did. I ran a song search for "anthem" and found only 1 result, but after some more digging, I found that the multiple entries returned were being collapsed into one, so once I temporarily stopped this behavior, and got returned three different results from the "anthem" search.
+
+**How I found the root cause:**
+
+To find the root issue, I started in `routes/songs` looking at the problimatic class, `search`. From there I looked at what it called, which was `search_song`, found where it was located via the imports, navigated to that file in the repo, then Ctrl+f in the file to find the class. I was initially unconfident I had found the correct issue in the class, as I was unfamiliar with what the class was doing, so I turned to AI. I gave the AI the class, the bug report, and some information from my own testing. It then pointed me to what could have been the issue, and after some further experimentation with the bug, the diagnosis it provided me appeared to be correct, and the issue.
+
+**The root cause:**
+
+The primary issue that caused this bug was the `.outerjoin(song_tags, song.id == song_tags.c.song_id)` command in the class. This caused each song to show up equal to the amount of tags the song had, so the song Simone searched for appeared three times, songs with one tag appeared once, and songs with zero tags appeared no times. 
+
+**My fix and side-effect check**
+
+My primary fix for this issue was just entirely removing the problematic line as it was entirely unnecessary, as the information it supposidly gathers is just added later in the class. As with the previous issue, the only assurance test I had to make was to make sure that `search` in `routes/songs` still works properly, as `search_song` is used nowhere else in the program. Once I completed these tests, the issue was officially fixed.
 
