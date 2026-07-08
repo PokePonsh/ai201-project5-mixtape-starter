@@ -22,3 +22,17 @@ user reads a notification:
 
 **Noticed patterns:**
 One pattern that was very obvious when looking at the program was the structure of each of the routes was nearly identical. Their structure is running a program from one of the services, and throwing an error when an input causes an issue. All the logic is done outside of the actual routes, which overall makes sense.
+
+## Bug Reproduction
+
+**Issue #2:**
+
+I reproduced this bug by adding a friend to a user, and having that friend play a song the previous day near midnight, than ran the command the next day. This caused the friend to show up as playing that song, even though they weren't playing it that day, but the previous day.
+
+**Issue #3:**
+
+I reproduced this bug by following exactly what Simone did. I ran a song search for "anthem" and found only 1 result, but after some more digging, I found that the multiple entries returned were being collapsed into one, so once I temporarily stopped this behavior, and got returned three different results from the "anthem" search.
+
+**Issue #5**
+
+Reproducing this issue was very simplistic I tested all three playlists created in seed_data, and when launcing all three song lists using `/playlists/<playlist_id>/songs` without exemption it did not show the last song the playlist should've included.
