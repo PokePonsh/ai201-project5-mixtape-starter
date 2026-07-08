@@ -24,10 +24,6 @@ user reads a notification:
 One pattern that was very obvious when looking at the program was the structure of each of the routes was nearly identical. Their structure is running a program from one of the services, and throwing an error when an input causes an issue. All the logic is done outside of the actual routes, which overall makes sense.
 
 
-**Issue #5**
-
-Reproducing this issue was very simplistic I tested all three playlists created in seed_data, and when launcing all three song lists using `/playlists/<playlist_id>/songs` without exemption it did not show the last song the playlist should've included.
-
 ## Root cause Analysis #1
 
 **Issue #2- Friends Listening Now shows people from yesterday**
@@ -68,3 +64,22 @@ The primary issue that caused this bug was the `.outerjoin(song_tags, song.id ==
 
 My primary fix for this issue was just entirely removing the problematic line as it was entirely unnecessary, as the information it supposidly gathers is just added later in the class. As with the previous issue, the only assurance test I had to make was to make sure that `search` in `routes/songs` still works properly, as `search_song` is used nowhere else in the program. Once I completed these tests, the issue was officially fixed.
 
+## Root Cause Analysis #3
+
+**Issue #5- The last song in a playlist never shows up**
+
+**Reproduction:**
+
+Reproducing this issue was very simplistic I tested all three playlists created in seed_data, and when launcing all three song lists using `/playlists/<playlist_id>/songs` without exemption it did not show the last song the playlist should've included.
+
+**How I found the root cause:**
+
+To find the root issue, I started in `routes/playlists` looking at the problimatic class, `get_songs`. From there I looked at what it called, which was `get_playlist_songs`, found where it was located via the imports, navigated to that file in the repo, then Ctrl+f in the file to find the class. I found the problematic issue quite quickly. As there was an unnecessary [:-1] at the end of the return statement.
+
+**The root cause:**
+
+As stated above, the return statement in the class was `return [song.to_dict() for song in songs[:-1]]. This return statement was clipping one song from the highest position in the playlist. This explains both why one of the songs on the playlist is missing, and why its always the most recently added song, as it would be at the top of the playlist.
+
+**My fix and side-effect check:**
+
+The solution to this bug was also really simple; just remove [:-1] from the return statement. This would remove the clipping, and ensure that the whole playlist is presented. As with all the above issues, the `get_playlist_songs` class only affected the problematic call in the app, so the only thing that I needed to check was the app. Once I ensured that the new class worked with no issue, my final bug was solved.
